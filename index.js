@@ -1,6 +1,9 @@
 var express = require("express");
 var bodyParser = require("body-parser");
 
+
+
+// Item represents a named thing that can be stored
 var Item = function(inName, inID)
 {
     this.name = inName;
@@ -8,11 +11,14 @@ var Item = function(inName, inID)
 };
 
 
+
+// Storage has a group of Items.
 var Storage = function()
 {
     this.items = [];
     this.id = 0;
 };
+// a wrapper method for the Item constructor
 Storage.prototype.add = function(inName)
 {
     var item = new Item(inName, this.id)
@@ -21,81 +27,118 @@ Storage.prototype.add = function(inName)
     
     return item;
 };
-Storage.prototype.get = function(inID)
+// Return the index of the item with the id inID
+Storage.prototype.getIndexOf = function(inID)
 {
-    
+    var i;
+    for(i=0; i<this.items.length; i++)
+    {
+        if(this.items[i].id == inID)
+        {
+            return i;
+        }
+    }
+    return undefined;
+};
+// Remove an item by its id
+Storage.prototype.remove = function(inID)
+{
+    return this.items.splice(inID, 1);
+};
+// Replace an item by its id
+Storage.prototype.replace = function(inID, inItem)
+{
+    this.items[inID] = inItem;
+    return inItem;
 };
 
 
+
+// Storage instance
 var store = new Storage();
 store.add("Beans");
 store.add("Apples");
 store.add("Onions");
 
 
-var server = express();
 
-server.use(bodyParser.json());
-server.use("/items", function(inReq, inRes, inNext)
+// Validation singleton. contains middleware functions
+var Validate = {};
+// tacks a "valid" object onto the request object that will contain validated values
+Validate.setup = function(inReq, inRes, inNext)
 {
-    var i, id, match;
+    inReq.valid = {};
+    inNext();  
+};
+// verify that an id was supplied, and that the id actually matches up to an object in store.items
+Validate.id = function(inReq, inRes, inNext)
+{
+    var id, index;
     
-    id = parseInt(inReq.param("id"));
-    for(i=0; i<store.items.length; i++)
+    id = inReq.param("id");
+    if(id !== undefined)
     {
-        if(id === store.items[i].id)
+        id = parseInt(id);
+    }
+    else
+    {
+        inRes.json({"error":"no id specified"});
+        return;
+    } 
+    
+    index = store.getIndexOf(id);
+    if(index === undefined)
+    {
+        inRes.json({"error":"no record found for "+id});
+        return;
+    }
+    
+    inReq.valid.id = id;
+    inReq.valid.index = index;
+    inNext();
+}
+// verify that a well formed json object is in the request body
+Validate.body = function(inReq, inRes, inNext)
+{
+    if(inReq.body === undefined)
+    {
+        inRes.json({"error":"request body is empty"});
+    }
+    else
+    {
+        if(inReq.body.name === undefined)
         {
-            match = i;
-            break;
+            inRes.json({"error":"request body is malformed"});
         }
     }
-    inReq.storage = {
-        id: id,
-        index: match,
-        model: inReq.body
-    };
     
+    inReq.valid.body = inReq.body;
     inNext();
-});
+}
 
+
+
+// Express setup
+var server = express();
+server.use(bodyParser.json());
+server.use("/items", Validate.setup);
 server.get("/items", function(inReq, inRes)
 {
-     inRes.json(store.items);
+    inRes.json(store.items);
 });
-server.post("/items", function(inReq, inRes)
+server.post("/items", Validate.body, function(inReq, inRes)
 {
-    var item = store.add(inReq.body.name);
+    var item = store.add(inReq.valid.body.name);
     inRes.json(item);
 });
-server.delete("/items/:id", function(inReq, inRes)
+server.delete("/items/:id", Validate.id, function(inReq, inRes)
 {
-    var i;
-    var id = parseInt(inReq.params.id);
-    var match = {"error":"no item has the id: "+id};
-    for(i=0; i<store.items.length; i++)
-    {
-        if(id === store.items[i].id)
-        {
-            match = store.items.splice(i, 1);
-            break;
-        }
-    }
-    inRes.json(match);
+    var item = store.remove(inReq.valid.index);
+    inRes.json(item);
 });
-server.put("/items/:id", function(inReq, inRes)
+server.put("/items/:id", Validate.id, Validate.body, function(inReq, inRes)
 {
-    var i;
-    var id = parseInt(inReq.params.id);
-    var match = {"error":"no item has the id: "+id};
-    for(i=0; i<store.items.length; i++)
-    {
-        if(id === store.items[i].id)
-        {
-            store.items[i] = inReq.body;
-            match = inReq.body;
-            break;
-        }
-    }
-    inRes.json(match);
+    var item = store.replace(inReq.valid.id, inReq.valid.body);
+    inRes.json(item);
 });
 server.listen(process.env.PORT, process.env.IP);

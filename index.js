@@ -129,7 +129,7 @@ server.get("/items", function(inReq, inRes)
 server.post("/items", Validate.body, function(inReq, inRes)
 {
     var item = store.add(inReq.valid.body.name);
-    inRes.json(item);
+    inRes.status(201).json(item);
 });
 server.delete("/items/:id", Validate.id, function(inReq, inRes)
 {
@@ -142,3 +142,7 @@ server.put("/items/:id", Validate.id, Validate.body, function(inReq, inRes)
     inRes.json(item);
 });
 server.listen(process.env.PORT, process.env.IP);
+
+
+exports.app = server;
+exports.storage = store;

@@ -1,11 +1,11 @@
 var chai = require('chai');
 var chaiHttp = require('chai-http');
-var server = require('../index.js');
+var app = require('../app/server');
+
+var server = app.server;
+var storage = app.storage;
 
 var should = chai.should();
-var app = server.app;
-var storage = server.storage;
-
 chai.use(chaiHttp);
 
 
@@ -15,6 +15,7 @@ function checkStatus(inError, inResponse, inStatus)
    inResponse.should.have.status(inStatus);
    inResponse.should.be.json;
 }
+
 function checkItem(inItem)
 {
    inItem.should.be.a('object');
@@ -25,6 +26,7 @@ function checkItem(inItem)
    inItem.should.have.property('name');
    inItem.name.should.be.a('string');
 }
+
 function checkArray(inArray, inLength)
 {
    inArray.should.be.a("array");
@@ -35,7 +37,7 @@ describe("Shopping List", function()
 {
    it("should list items on GET", function(inDoneHandler)
    {
-      chai.request(app).get("/items").end(function(inError, inResponse){
+      chai.request(server).get("/items").end(function(inError, inResponse){
          
          //good response
          checkStatus(inError, inResponse, 200);
@@ -45,7 +47,8 @@ describe("Shopping List", function()
          
          //storage contians Items
          checkItem(inResponse.body[0]);
-
+         
+         // verify existing items in storage
          inResponse.body[0].name.should.equal('Beans');
          inResponse.body[1].name.should.equal('Apples');
          inResponse.body[2].name.should.equal('Onions');
@@ -57,7 +60,7 @@ describe("Shopping List", function()
    
    it("should add an item on POST", function(inDoneHandler)
    {
-      chai.request(app).post("/items").send({"name":"Kale"}).end(function(inError, inResponse){
+      chai.request(server).post("/items").send({"name":"Kale"}).end(function(inError, inResponse){
          
          //good response
          checkStatus(inError, inResponse, 201);
@@ -78,14 +81,21 @@ describe("Shopping List", function()
    
    it("should update an item on PUT", function(inDoneHandler)
    {
-      
-      chai.request(app).put("/items/3").send({"name":"Corn", "id":3}).end(function(inError, inResponse){
+      chai.request(server).put("/items/3").send({"name":"Corn", "id":3}).end(function(inError, inResponse){
          
+         //good response
          checkStatus(inError, inResponse, 201);
+         
+         //updated item
          checkItem(inResponse.body);
+         
+         //storage still has 4 members
          checkArray(storage.items, 4);
+         
+         //the members are items
          checkItem(storage.items[3]);
-
+         
+         // verify that the Item sent now exists in storage under the right id
          storage.items[3].name.should.equal("Corn");
          storage.items[3].id.should.equal(3);
          
@@ -96,15 +106,16 @@ describe("Shopping List", function()
    
    it("should remove an item on DELETE", function(inDoneHandler)
    {
-      
-      chai.request(app).delete("/items/3").end(function(inError, inResponse){
+      chai.request(server).delete("/items/3").end(function(inError, inResponse){
          
+         //good response
          checkStatus(inError, inResponse, 200);
          
+         // verify that the right item was deleted
          inResponse.body.id.should.equal(3);
          
-         storage.items.should.be.a("array");
-         storage.items.should.have.length(3);
+         // check that storage is now smaller
+         checkArray(storage.items, 3);
          
          inDoneHandler();
        });

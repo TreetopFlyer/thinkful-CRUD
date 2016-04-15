@@ -70,15 +70,20 @@ Validate.setup = function(inReq, inRes, inNext)
     inReq.valid = {};
     inNext();  
 };
-// verify that an id was supplied, and that the id actually matches up to an object in store.items
+// verify that a numeric id was supplied
 Validate.id = function(inReq, inRes, inNext)
 {
-    var id, index;
+    var id;
     
     id = inReq.param("id");
     if(id !== undefined)
     {
         id = parseInt(id);
+        if(isNaN(id))
+        {
+            inRes.json({"error":"id is not an integer"});
+            return;
+        }
     }
     else
     {
@@ -86,14 +91,20 @@ Validate.id = function(inReq, inRes, inNext)
         return;
     } 
     
-    index = store.getIndexOf(id);
+    inReq.valid.id = id;
+    inNext();
+}
+//verify that the supplied id actually matches up to an object in store.items
+Validate.index = function(inReq, inRes, inNext)
+{
+    var index;
+    index = store.getIndexOf(inReq.valid.id);
     if(index === undefined)
     {
-        inRes.json({"error":"no record found for "+id});
+        inRes.json({"error":"no record found for "+inReq.valid.id});
         return;
     }
     
-    inReq.valid.id = id;
     inReq.valid.index = index;
     inNext();
 }
@@ -131,14 +142,24 @@ server.post("/items", Validate.body, function(inReq, inRes)
     var item = store.add(inReq.valid.body.name);
     inRes.status(201).json(item);
 });
-server.delete("/items/:id", Validate.id, function(inReq, inRes)
+server.delete("/items/:id", Validate.id, Validate.index, function(inReq, inRes)
 {
     var item = store.remove(inReq.valid.index);
     inRes.json(item);
 });
 server.put("/items/:id", Validate.id, Validate.body, function(inReq, inRes)
 {
-    var item = store.replace(inReq.valid.id, inReq.valid.body);
+    var index, item;
+    
+    index = store.getIndexOf(inReq.valid.id);
+    item = inReq.valid.body;
+    
+    if(index === undefined)
+    {
+        store.items.push(item);
+    }
+    
+    item = store.replace(inReq.valid.id, item);
     inRes.json(item);
 });
 server.listen(process.env.PORT, process.env.IP);

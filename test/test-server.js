@@ -9,15 +9,13 @@ var should = chai.should();
 chai.use(chaiHttp);
 
 
-function checkStatus(inError, inResponse, inStatus)
-{
+function checkStatus(inError, inResponse, inStatus){
    should.equal(inError, null);
    inResponse.should.have.status(inStatus);
    inResponse.should.be.json;
 }
 
-function checkItem(inItem)
-{
+function checkItem(inItem){
    inItem.should.be.a('object');
    
    inItem.should.have.property('id');
@@ -27,16 +25,13 @@ function checkItem(inItem)
    inItem.name.should.be.a('string');
 }
 
-function checkArray(inArray, inLength)
-{
+function checkArray(inArray, inLength){
    inArray.should.be.a("array");
    inArray.should.have.length(inLength);
 }
 
-describe("Shopping List", function()
-{
-   it("should list items on GET", function(inDoneHandler)
-   {
+describe("Shopping List", function(){
+   it("should list items on GET", function(inDoneHandler){
       chai.request(server).get("/items").end(function(inError, inResponse){
          
          //good response
@@ -58,8 +53,7 @@ describe("Shopping List", function()
    });
    
    
-   it("should add an item on POST", function(inDoneHandler)
-   {
+   it("should add an item on POST", function(inDoneHandler){
       chai.request(server).post("/items").send({"name":"Kale"}).end(function(inError, inResponse){
          
          //good response
@@ -79,8 +73,7 @@ describe("Shopping List", function()
    });
    
    
-   it("should update an item on PUT", function(inDoneHandler)
-   {
+   it("should update an item on PUT", function(inDoneHandler){
       chai.request(server).put("/items/3").send({"name":"Corn", "id":3}).end(function(inError, inResponse){
          
          //good response
@@ -104,8 +97,7 @@ describe("Shopping List", function()
    });
    
    
-   it("should remove an item on DELETE", function(inDoneHandler)
-   {
+   it("should remove an item on DELETE", function(inDoneHandler){
       chai.request(server).delete("/items/3").end(function(inError, inResponse){
          
          //good response
@@ -122,22 +114,16 @@ describe("Shopping List", function()
    });
    
    
-   it("throw an error when PUT with a malformed body", function(inDoneHandler)
-   {
+   it("throw an error when PUT with a malformed body", function(inDoneHandler){
       chai.request(server).put({"nme":"bananas"}).end(function(inError, inResponse){
-         
          should.exist(inError);
-         
          inDoneHandler();
        });
    });
    
-   it("throw an error when DELETE with a bad id", function(inDoneHandler)
-   {
+   it("throw an error when DELETE with a bad id", function(inDoneHandler){
       chai.request(server).delete("/items/10").end(function(inError, inResponse){
-
          should.exist(inError);
-         
          inDoneHandler();
        });
    });

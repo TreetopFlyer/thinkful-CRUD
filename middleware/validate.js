@@ -4,9 +4,9 @@ var validate = {};
 //Storage dependency
 validate.store = undefined;
 
-validate.setup = function(inStorage)
-{
+validate.setup = function(inStorage){
     validate.store = inStorage;
+    
     return function(inReq, inRes, inNext)
     {
         inReq.valid = {};
@@ -15,21 +15,18 @@ validate.setup = function(inStorage)
 };
 
 // verify that a numeric id was supplied
-validate.id = function(inReq, inRes, inNext)
-{
+validate.id = function(inReq, inRes, inNext){
     var id;
+    
     id = inReq.param("id");
-    if(id !== undefined)
-    {
+    if(id !== undefined){
         id = parseInt(id);
-        if(isNaN(id))
-        {
+        if(isNaN(id)){
             inRes.status(400).json({"error":"id is not an integer"});
             return;
         }
     }
-    else
-    {
+    else{
         inRes.status(400).json({"error":"no id specified"});
         return;
     } 
@@ -39,31 +36,27 @@ validate.id = function(inReq, inRes, inNext)
 };
 
 //verify that the supplied id actually matches up to an object in store.items
-validate.index = function(inReq, inRes, inNext)
-{
+validate.index = function(inReq, inRes, inNext){
     var index;
+    
     index = validate.store.getIndexOf(inReq.valid.id);
-    if(index === undefined)
-    {
+    if(index === undefined){
         inRes.status(400).json({"error":"no record found for "+inReq.valid.id});
         return;
     }
+    
     inReq.valid.index = index;
     inNext();
 };
 
 // verify that a well formed json object is in the request body
-validate.body = function(inReq, inRes, inNext)
-{
-    if(inReq.body === undefined)
-    {
+validate.body = function(inReq, inRes, inNext){
+    if(inReq.body === undefined){
         inRes.status(400).json({"error":"request body is empty"});
         return;
     }
-    else
-    {
-        if(inReq.body.name === undefined)
-        {
+    else{
+        if(inReq.body.name === undefined){
             inRes.status(400).json({"error":"request body is malformed"});
             return;
         }

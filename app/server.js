@@ -19,29 +19,24 @@ store.add("Onions");
 var server = express();
 server.use(bodyParser.json());
 server.use("/items", validate.setup(store));
-server.get("/items", function(inReq, inRes)
-{
+server.get("/items", function(inReq, inRes){
     inRes.json(store.items);
 });
-server.post("/items", validate.body, function(inReq, inRes)
-{
+server.post("/items", validate.body, function(inReq, inRes){
     var item = store.add(inReq.valid.body.name);
     inRes.status(201).json(item);
 });
-server.delete("/items/:id", validate.id, validate.index, function(inReq, inRes)
-{
+server.delete("/items/:id", validate.id, validate.index, function(inReq, inRes){
     var item = store.remove(inReq.valid.index);
     inRes.json(item);
 });
-server.put("/items/:id", validate.id, validate.body, function(inReq, inRes)
-{
+server.put("/items/:id", validate.id, validate.body, function(inReq, inRes){
     var index, item;
     
     index = store.getIndexOf(inReq.valid.id);
     item = inReq.valid.body;
     
-    if(!index)
-    {
+    if(!index){
         store.items.push(item);
     }
     

@@ -58,12 +58,14 @@ validate.body = function(inReq, inRes, inNext)
     if(inReq.body === undefined)
     {
         inRes.status(400).json({"error":"request body is empty"});
+        return;
     }
     else
     {
         if(inReq.body.name === undefined)
         {
             inRes.status(400).json({"error":"request body is malformed"});
+            return;
         }
     }
     

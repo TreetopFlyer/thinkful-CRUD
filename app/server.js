@@ -40,7 +40,7 @@ server.put("/items/:id", validate.id, validate.body, function(inReq, inRes)
     index = store.getIndexOf(inReq.valid.id);
     item = inReq.valid.body;
     
-    if(index === undefined)
+    if(!index)
     {
         store.items.push(item);
     }

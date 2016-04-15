@@ -122,6 +122,25 @@ describe("Shopping List", function()
    });
    
    
+   it("throw an error when PUT with a malformed body", function(inDoneHandler)
+   {
+      chai.request(server).put({"nme":"bananas"}).end(function(inError, inResponse){
+         
+         should.exist(inError);
+         
+         inDoneHandler();
+       });
+   });
    
+   it("throw an error when DELETE with a bad id", function(inDoneHandler)
+   {
+      chai.request(server).delete("/items/10").end(function(inError, inResponse){
+
+         should.exist(inError);
+         
+         inDoneHandler();
+       });
+   });
+
    
 });

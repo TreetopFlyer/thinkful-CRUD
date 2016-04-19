@@ -9,7 +9,7 @@ MongoClient.connect('mongodb://localhost:27017/snippets', function(inError, inDa
     }
     else
     {
-        console.log("connected ok")    
+        console.log("connected ok"); 
     }
 
     var db = inDatabase;
@@ -74,26 +74,68 @@ MongoClient.connect('mongodb://localhost:27017/snippets', function(inError, inDa
         });
     };
 
-    var del = function(name, content) {
-        db.close();
+    var del = function(inName, inContent) {
+        var query = {
+            name:inName
+        };
+        
+        collection.findAndRemove(query, function(inError, inResult){
+            var snippet = inResult.value;
+            
+            if(!snippet || inError){
+                console.error("could not delete", inName);
+            }
+            else{
+                console.log("snippet deleted", inName);
+            }
+            db.close();
+        });
+    };
+    
+    var list = function()
+    {
+        collection.find().toArray(function(inError, inItems){
+            if(inError){
+                console.error("error generating list", inError);
+            }
+            else{
+                console.log(inItems);
+            }
+            db.close();
+        });
+    };
+    
+    var commandError = function()
+    {
+        console.error('Command not recognized');
+        db.close();   
     };
 
     var main = function() {
-        if (process.argv[2] == 'create') {
-            create(process.argv[3], process.argv[4]);
-        }
-        else if (process.argv[2] == 'read') {
-            read(process.argv[3]);
-        }
-        else if (process.argv[2] == 'update') {
-            update(process.argv[3], process.argv[4]);
-        }
-        else if (process.argv[2] == 'delete') {
-            del(process.argv[3]);
-        }
-        else {
-            console.error('Command not recognized');
-            db.close();
+        
+        switch(process.argv[2]){
+            case 'create' :
+                create(process.argv[3], process.argv[4]);
+                break;
+                
+            case 'read' :
+                read(process.argv[3]);
+                break;
+                
+            case 'update':
+                update(process.argv[3], process.argv[4]);
+                break;
+                
+            case 'delete':
+                del(process.argv[3]);
+                break;
+                
+            case 'list':
+                list();
+                break;
+                
+            default:
+                commandError();
         }
     }
 

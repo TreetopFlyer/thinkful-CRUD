@@ -1,15 +1,14 @@
 {
-  "name": "snippets",
+  "name": "snippets-mongoose",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "mongodb": "^2.1.16"
+    "mongoose": "^4.4.12"
   }
 }
